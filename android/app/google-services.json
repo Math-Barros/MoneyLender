@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "811775482990",
+    "project_id": "moneylender-id",
+    "storage_bucket": "moneylender-id.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:811775482990:android:42b54d10c8f715cf605a7f",
+        "android_client_info": {
+          "package_name": "com.example.moneylender"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "811775482990-go22vvgn0sjn6i1qc9mujt238m4gl3aq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.moneylender",
+            "certificate_hash": "44bba8a2103d7c92b674ba829039ba5a1855201a"
+          }
+        },
+        {
+          "client_id": "811775482990-36li2hhrpeutbfe4vug8o4gvq409aed1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxGtcC6RuyjkobFuuSy0FxtTC1XsUW394"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "811775482990-36li2hhrpeutbfe4vug8o4gvq409aed1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
