@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
   static String id = '/LoginPage';
   final GoogleSignIn googleSignIn;
 
-  LoginPage({required this.googleSignIn});
+  const LoginPage({super.key, required this.googleSignIn});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -108,7 +108,6 @@ class _LoginPageState extends State<LoginPage> {
                         style:
                             TextStyle(fontSize: 30.0, color: Color(0xFFCBB26A)),
                       ),
-                      
                       Text(
                         'please login to your account.',
                         style:
@@ -120,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       const SizedBox(height: 20.0),
                       TextField(
+                        style: const TextStyle(color: Colors.white),
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (value) {
                           email = value;
@@ -133,6 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 20.0),
                       TextField(
+                        style: const TextStyle(color: Colors.white),
                         obscureText: true,
                         onChanged: (value) {
                           password = value;
@@ -169,10 +170,8 @@ class _LoginPageState extends State<LoginPage> {
                               email: email,
                               password: password,
                             );
-                            if (newUser != null) {
-                              Navigator.pushNamed(context, HomeScreen.id,
-                                  arguments: newUser.user);
-                            }
+                            Navigator.pushNamed(context, HomeScreen.id,
+                                arguments: newUser.user);
                           } catch (e) {
                             print(e.toString());
                             if (e.toString() == 'ERROR_WRONG_PASSWORD') {

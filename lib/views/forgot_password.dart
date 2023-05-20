@@ -9,6 +9,8 @@ class ForgotPassword extends StatelessWidget {
 
   late String email;
 
+  ForgotPassword({super.key});
+
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
   }
@@ -57,8 +59,7 @@ class ForgotPassword extends StatelessWidget {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
-                    primary: const Color(0xff447def),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0), backgroundColor: const Color(0xff447def),
                   ),
                   onPressed: () {
                     resetPassword(email);

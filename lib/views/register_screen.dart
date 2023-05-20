@@ -9,7 +9,7 @@ class RegisterPage extends StatefulWidget {
   static String id = '/RegisterPage';
   final GoogleSignIn googleSignIn;
 
-  RegisterPage({required this.googleSignIn});
+  const RegisterPage({super.key, required this.googleSignIn});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _wrongPassword = false;
 
   String _emailText = 'Please use a valid email';
-  String _passwordText = 'Please use a strong password';
+  final String _passwordText = 'Please use a strong password';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -116,6 +116,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 Column(
                   children: [
                     TextField(
+                      style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.name,
                       onChanged: (value) {
                         name = value;
@@ -128,6 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 20.0),
                     TextField(
+                      style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) {
                         email = value;
@@ -141,6 +143,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 20.0),
                     TextField(
+                      style: const TextStyle(color: Colors.white),
                       obscureText: true,
                       keyboardType: TextInputType.visiblePassword,
                       onChanged: (value) {
@@ -177,17 +180,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           password: password,
                         );
 
-                        if (newUser != null) {
-                          print('user authenticated by registration');
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomeScreen(
-                                  user: newUser.user!,
-                                  googleSignIn: widget.googleSignIn),
-                            ),
-                          );
-                        }
+                        print('user authenticated by registration');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomeScreen(
+                                user: newUser.user!,
+                                googleSignIn: widget.googleSignIn),
+                          ),
+                        );
                       } else {
                         if (!validator.isEmail(email)) {
                           setState(() {
