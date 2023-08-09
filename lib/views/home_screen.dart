@@ -5,11 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:moneylender/views/event_details_screen.dart';
 import 'package:moneylender/views/add_event_screen.dart';
 import 'package:moneylender/views/friend_list_screen.dart';
-import 'package:moneylender/views/profile_screen.dart'; // Importe a classe ProfileScreen
+import 'package:moneylender/views/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  static const String id = '/home';
-
   final User? user;
   final GoogleSignIn googleSignIn;
 
@@ -25,15 +23,19 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _navigateToAddEvent(BuildContext context) {
-    Navigator.pushNamed(context, AddEventScreen.id);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEventScreen(user: user!),
+      ),
+    );
   }
 
   void _navigateToFriendList(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            FriendListScreen(userId: FirebaseAuth.instance.currentUser!.uid),
+        builder: (context) => FriendListScreen(userId: user!.uid),
       ),
     );
   }
@@ -42,10 +44,8 @@ class HomeScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProfileScreen(
-            user: user,
-            googleSignIn:
-                googleSignIn), // Passe o objeto User e o GoogleSignIn para ProfileScreen
+        builder: (context) =>
+            ProfileScreen(user: user, googleSignIn: googleSignIn),
       ),
     );
   }
@@ -75,8 +75,9 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user!.uid)
                   .collection('events')
-                  .where('creatorId', isEqualTo: user?.uid)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -101,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                     final eventName = event?['name']?.toString() ?? '';
                     final eventDescription =
                         event?['description']?.toString() ?? '';
-                    final eventId = event?['eventId']?.toString() ?? '';
+                    final eventId = events[index].id; // Obtém o ID do documento
 
                     return ListTile(
                       title: Text(eventName),
@@ -136,8 +137,7 @@ class HomeScreen extends StatelessWidget {
         ],
         onTap: (index) {
           if (index == 1) {
-            _navigateToProfile(
-                context); // Navegue para ProfileScreen quando o índice for 1
+            _navigateToProfile(context);
           } else if (index == 2) {
             _navigateToFriendList(context);
           }
@@ -147,6 +147,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _navigateToEventDetails(BuildContext context, String eventId) {
-    Navigator.pushNamed(context, EventDetailsScreen.id, arguments: eventId);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EventDetailsScreen(eventId: eventId, user: user!),
+      ),
+    );
   }
 }

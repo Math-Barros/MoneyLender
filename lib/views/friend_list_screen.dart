@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class FriendListScreen extends StatefulWidget {
-  static const String id = '/friendList';
-
   final String userId;
 
   const FriendListScreen({required this.userId});
@@ -24,7 +22,10 @@ class _FriendListScreenState extends State<FriendListScreen> {
         title: const Text('Friend List'),
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('users').doc(widget.userId).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.userId)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Text('Ocorreu um erro ao carregar a lista de amigos.');
@@ -49,9 +50,6 @@ class _FriendListScreenState extends State<FriendListScreen> {
             itemCount: friends.length,
             itemBuilder: (context, index) {
               final friendId = friends[index];
-
-              // Aqui você pode recuperar as informações do amigo a partir do ID e exibi-las
-              // Você pode fazer uma nova consulta ao Firestore usando o friendId para obter os dados do amigo
 
               return ListTile(
                 title: Text('Friend $index'),
@@ -86,7 +84,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
         content: TextField(
           decoration: const InputDecoration(labelText: 'ID do Amigo'),
           onChanged: (value) {
-            // Implemente a lógica para armazenar o ID do amigo inserido
+            // Implement the logic to store the friend's ID entered by the user
           },
         ),
         actions: [
@@ -98,18 +96,33 @@ class _FriendListScreenState extends State<FriendListScreen> {
           ),
           TextButton(
             onPressed: () async {
-              final friendId = ''; // Obtenha o ID do amigo inserido no campo de texto
+              final friendId =
+                  ''; // Get the friend's ID entered in the text field
 
               if (friendId.isNotEmpty) {
-                final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+                final userRef = FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(widget.userId);
 
-                await userRef.update({
-                  'friends': FieldValue.arrayUnion([friendId]),
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Amigo adicionado com sucesso!')),
-                );
+                // Check if the friendId is a valid user in your system
+                final friendSnapshot = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(friendId)
+                    .get();
+                if (friendSnapshot.exists) {
+                  await userRef.update({
+                    'friendRequests': FieldValue.arrayUnion([friendId]),
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Solicitação de amizade enviada!')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('ID do amigo não encontrado.')),
+                  );
+                }
               }
 
               Navigator.of(context).pop();
@@ -126,7 +139,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
       friends.remove(friendId);
     });
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(widget.userId);
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.userId);
 
     await userRef.update({
       'friends': FieldValue.arrayRemove([friendId]),

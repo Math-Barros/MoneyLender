@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,7 +8,6 @@ import 'package:validators/validators.dart' as validator;
 import 'package:moneylender/views/home_screen.dart';
 
 class RegisterPage extends StatefulWidget {
-  static String id = '/RegisterPage';
   final GoogleSignIn googleSignIn;
 
   const RegisterPage({super.key, required this.googleSignIn});
@@ -280,7 +281,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, LoginPage.id);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                LoginPage(googleSignIn: widget.googleSignIn),
+                          ),
+                        );
                       },
                       child: const Text(
                         ' Sign In',

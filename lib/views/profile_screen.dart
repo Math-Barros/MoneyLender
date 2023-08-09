@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,8 +9,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
-  static const String id = '/profile';
-
   final User? user;
   final GoogleSignIn googleSignIn;
 
@@ -20,6 +20,29 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String? profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileImageUrl();
+  }
+
+  Future<void> _fetchProfileImageUrl() async {
+    if (widget.user != null) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${widget.user?.uid}.jpg');
+
+      try {
+        final imageUrl = await storageRef.getDownloadURL();
+        setState(() {
+          profileImageUrl = imageUrl;
+        });
+      } catch (e) {
+        print("Error fetching profile image URL: $e");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +90,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final pickedImage = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
-      final storageRef =
-          FirebaseStorage.instance.ref().child('profile_images/${widget.user?.uid}.jpg');
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${widget.user?.uid}.jpg');
       final uploadTask = storageRef.putFile(File(pickedImage.path));
 
       final snapshot = await uploadTask.whenComplete(() {});

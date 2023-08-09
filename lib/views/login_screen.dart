@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:moneylender/views/home_screen.dart';
@@ -8,7 +10,6 @@ bool _wrongEmail = false;
 bool _wrongPassword = false;
 
 class LoginPage extends StatefulWidget {
-  static String id = '/LoginPage';
   final GoogleSignIn googleSignIn;
 
   const LoginPage({super.key, required this.googleSignIn});
@@ -56,7 +57,13 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (user != null) {
-      Navigator.pushNamed(context, HomeScreen.id, arguments: user);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              HomeScreen(user: user, googleSignIn: widget.googleSignIn),
+        ),
+      );
     }
   }
 
@@ -170,8 +177,18 @@ class _LoginPageState extends State<LoginPage> {
                               email: email,
                               password: password,
                             );
-                            Navigator.pushNamed(context, HomeScreen.id,
-                                arguments: newUser.user);
+
+                            if (newUser.user != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => HomeScreen(
+                                    user: newUser.user!,
+                                    googleSignIn: widget.googleSignIn,
+                                  ),
+                                ),
+                              );
+                            }
                           } catch (e) {
                             print(e.toString());
                             if (e.toString() == 'ERROR_WRONG_PASSWORD') {
@@ -199,7 +216,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 20.0),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -229,7 +245,6 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                       const SizedBox(height: 20.0),
-
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -268,7 +283,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushNamed(context, RegisterPage.id);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegisterPage(
+                                  googleSignIn: widget.googleSignIn),
+                            ),
+                          );
                         },
                         child: const Text(
                           ' Register now',

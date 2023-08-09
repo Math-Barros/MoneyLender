@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 
 class ForgotPassword extends StatelessWidget {
-  static String id = '/ForgotPassword';
-
   final _auth = FirebaseAuth.instance;
 
   late String email;
@@ -59,7 +57,8 @@ class ForgotPassword extends StatelessWidget {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0), backgroundColor: const Color(0xff447def),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    backgroundColor: const Color(0xff447def),
                   ),
                   onPressed: () {
                     resetPassword(email);
