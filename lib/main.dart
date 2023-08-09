@@ -1,5 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +9,8 @@ import 'package:moneylender/views/home_screen.dart';
 import 'package:moneylender/views/login_screen.dart';
 import 'package:moneylender/views/register_screen.dart';
 import 'package:moneylender/views/friend_list_screen.dart';
-import 'package:moneylender/views/profile_screen.dart'; // Importe a classe ProfileScreen
+import 'package:moneylender/views/profile_screen.dart'; // Import the ProfileScreen class
+import 'package:moneylender/views/edit_event_screen.dart'; // Import the EditEventScreen class
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,16 +41,23 @@ class MyApp extends StatelessWidget {
         RegisterPage.id: (context) => RegisterPage(googleSignIn: googleSignIn),
         HomeScreen.id: (context) =>
             HomeScreen(user: currentUser, googleSignIn: googleSignIn),
-        EventDetailsScreen.id: (context) =>
-            const EventDetailsScreen(eventId: 'my events'),
+        EventDetailsScreen.id: (context) => EventDetailsScreen(
+              eventId: 'my events',
+              eventPassword: 'password', // Add a sample password
+              user: currentUser!, // Pass the current user
+            ),
         AddEventScreen.id: (context) => AddEventScreen(
-            user: currentUser!), // Passe o usuário atual para AddEventScreen
+            user: currentUser!), // Pass the current user to AddEventScreen
+        EditEventScreen.id: (context) => EditEventScreen(
+            eventId: 'my events', // Add a sample event ID
+            eventPassword: 'password', // Add a sample password
+            user: currentUser!), // Pass the current user to EditEventScreen
         FriendListScreen.id: (context) => FriendListScreen(
             userId: currentUser?.uid ??
-                ''), // Passe o ID do usuário atual para FriendListScreen
+                ''), // Pass the ID of the current user to FriendListScreen
         ProfileScreen.id: (context) => ProfileScreen(
             user: currentUser,
-            googleSignIn: googleSignIn), // Adicione a rota para ProfileScreen
+            googleSignIn: googleSignIn), // Add the route for ProfileScreen
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
