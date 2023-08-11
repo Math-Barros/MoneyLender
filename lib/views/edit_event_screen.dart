@@ -6,7 +6,7 @@ class EditEventScreen extends StatefulWidget {
   final String eventId;
   final User user;
 
-  const EditEventScreen({
+  const EditEventScreen({super.key, 
     required this.eventId,
     required this.user,
   });
@@ -16,8 +16,8 @@ class EditEventScreen extends StatefulWidget {
 }
 
 class _EditEventScreenState extends State<EditEventScreen> {
-  TextEditingController _eventNameController = TextEditingController();
-  TextEditingController _eventDescriptionController = TextEditingController();
+  final TextEditingController _eventNameController = TextEditingController();
+  final TextEditingController _eventDescriptionController = TextEditingController();
 
   String _eventName = '';
   String _eventDescription = '';
@@ -55,7 +55,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editar Evento'),
+        title: const Text('Editar Evento'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,27 +63,27 @@ class _EditEventScreenState extends State<EditEventScreen> {
           children: [
             TextFormField(
               controller: _eventNameController,
-              decoration: InputDecoration(labelText: 'Nome do Evento'),
+              decoration: const InputDecoration(labelText: 'Nome do Evento'),
               onChanged: (value) {
                 setState(() {
                   _eventName = value;
                 });
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextFormField(
               controller: _eventDescriptionController,
-              decoration: InputDecoration(labelText: 'Descrição do Evento'),
+              decoration: const InputDecoration(labelText: 'Descrição do Evento'),
               onChanged: (value) {
                 setState(() {
                   _eventDescription = value;
                 });
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () => _updateEventDetails(context),
-              child: Text('Salvar Alterações'),
+              child: const Text('Salvar Alterações'),
             ),
           ],
         ),

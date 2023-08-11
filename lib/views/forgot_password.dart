@@ -22,7 +22,7 @@ class ForgotPassword extends StatelessWidget {
         children: [
           Align(
             alignment: Alignment.topRight,
-            child: Image.asset('assets/images/background.png'),
+            //child: Image.asset('assets/images/background.png'),
           ),
           Padding(
             padding: const EdgeInsets.only(

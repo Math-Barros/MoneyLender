@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:moneylender/views/login_screen.dart';
 import 'package:validators/validators.dart' as validator;
 import 'package:moneylender/views/home_screen.dart';
@@ -10,57 +11,24 @@ import 'package:moneylender/views/home_screen.dart';
 class RegisterPage extends StatefulWidget {
   final GoogleSignIn googleSignIn;
 
-  const RegisterPage({super.key, required this.googleSignIn});
+  const RegisterPage({required this.googleSignIn});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  late String name = '';
   late String email = '';
   late String password = '';
 
   bool _showSpinner = false;
   bool _wrongEmail = false;
-  bool _wrongPassword = false;
 
   String _emailText = 'Please use a valid email';
   final String _passwordText = 'Please use a strong password';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<User?> _handleSignIn() async {
-    User? user;
-    bool isSignedIn = await widget.googleSignIn.isSignedIn();
-    if (isSignedIn) {
-      user = _auth.currentUser;
-    } else {
-      final GoogleSignInAccount? googleUser =
-          await widget.googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser!.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      user = (await _auth.signInWithCredential(credential)).user;
-    }
-
-    return user;
-  }
-
-  void onGoogleSignIn(BuildContext context) async {
-    User? user = await _handleSignIn();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            HomeScreen(user: user!, googleSignIn: widget.googleSignIn),
-      ),
-    );
-  }
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -70,16 +38,15 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Stack(
         children: [
           Positioned(
-            top: 30, // Define a posição vertical do topo (em pixels)
-            left: 130, // Define a posição horizontal da direita (em pixels)
+            top: 30,
+            left: 130,
             child: ColorFiltered(
               colorFilter: const ColorFilter.mode(
-                Color(0xFFCBB26A), // Define a cor hexadecimal aqui
+                Color(0xFFCBB26A),
                 BlendMode.srcATop,
               ),
               child: Transform.scale(
-                scale:
-                    0.5, // Define o fator de escala para ajustar o tamanho (neste caso, 50% do tamanho original)
+                scale: 0.5,
                 child: Image.asset('assets/images/logo.jpg'),
               ),
             ),
@@ -118,22 +85,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     TextField(
                       style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.name,
-                      onChanged: (value) {
-                        name = value;
-                      },
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        hintStyle: TextStyle(color: Color(0xFFCBB26A)),
-                        labelStyle: TextStyle(color: Color(0xFFCBB26A)),
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    TextField(
-                      style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) {
-                        email = value;
+                        setState(() {
+                          email = value;
+                          _wrongEmail = false;
+                        });
                       },
                       decoration: InputDecoration(
                         labelText: 'Email',
@@ -148,13 +105,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       obscureText: true,
                       keyboardType: TextInputType.visiblePassword,
                       onChanged: (value) {
-                        password = value;
+                        setState(() {
+                          password = value;
+                        });
                       },
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
-                        errorText: _wrongPassword ? _passwordText : null,
-                        labelStyle: const TextStyle(color: Color(0xFFCBB26A)),
-                        errorStyle: const TextStyle(color: Colors.red),
+                        labelStyle: TextStyle(color: Color(0xFFCBB26A)),
                       ),
                     ),
                     const SizedBox(height: 10.0),
@@ -167,8 +124,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   onPressed: () async {
                     setState(() {
-                      _wrongEmail = false;
-                      _wrongPassword = false;
                       _showSpinner = true;
                     });
 
@@ -181,27 +136,21 @@ class _RegisterPageState extends State<RegisterPage> {
                           password: password,
                         );
 
-                        print('user authenticated by registration');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => HomeScreen(
-                                user: newUser.user!,
-                                googleSignIn: widget.googleSignIn),
+                              user: newUser.user!,
+                              googleSignIn: widget.googleSignIn,
+                            ),
                           ),
                         );
                       } else {
-                        if (!validator.isEmail(email)) {
-                          setState(() {
+                        setState(() {
+                          if (!validator.isEmail(email)) {
                             _wrongEmail = true;
-                          });
-                        }
-
-                        if (!validator.isLength(password, 6)) {
-                          setState(() {
-                            _wrongPassword = true;
-                          });
-                        }
+                          }
+                        });
                       }
                     } on FirebaseAuthException catch (e) {
                       setState(() {
@@ -221,32 +170,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     'Register',
                     style: TextStyle(fontSize: 25.0, color: Colors.white),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        height: 1.0,
-                        width: 60.0,
-                        color: const Color(0xFFCBB26A),
-                      ),
-                    ),
-                    const Text(
-                      'Or',
-                      style:
-                          TextStyle(fontSize: 25.0, color: Color(0xFFCBB26A)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        height: 1.0,
-                        width: 60.0,
-                        color: const Color(0xFFCBB26A),
-                      ),
-                    ),
-                  ],
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -310,5 +233,39 @@ class _RegisterPageState extends State<RegisterPage> {
         ],
       ),
     );
+  }
+
+  Future<User?> _handleSignIn() async {
+    User? user;
+    bool isSignedIn = await widget.googleSignIn.isSignedIn();
+    if (isSignedIn) {
+      user = _auth.currentUser;
+    } else {
+      final GoogleSignInAccount? googleUser =
+          await widget.googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser!.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      user = (await _auth.signInWithCredential(credential)).user;
+    }
+
+    return user;
+  }
+
+  Future<void> onGoogleSignIn(BuildContext context) async {
+    User? user = await _handleSignIn();
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              HomeScreen(user: user, googleSignIn: widget.googleSignIn),
+        ),
+      );
+    }
   }
 }

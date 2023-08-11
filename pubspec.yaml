@@ -33,6 +33,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   
   flutter_lints: ^2.0.0
+  curved_navigation_bar: ^1.0.3
 
 
 flutter:

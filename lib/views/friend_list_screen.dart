@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:moneylender/views/home_screen.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:moneylender/views/profile_screen.dart';
 
 class FriendListScreen extends StatefulWidget {
   final String userId;
 
-  const FriendListScreen({required this.userId});
+  const FriendListScreen({Key? key, required this.userId}) : super(key: key);
 
   @override
   _FriendListScreenState createState() => _FriendListScreenState();
@@ -14,6 +19,8 @@ class FriendListScreen extends StatefulWidget {
 
 class _FriendListScreenState extends State<FriendListScreen> {
   List<String> friends = [];
+  int _selectedIndex = 2;
+  late String friendEmailToAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -49,14 +56,14 @@ class _FriendListScreenState extends State<FriendListScreen> {
           return ListView.builder(
             itemCount: friends.length,
             itemBuilder: (context, index) {
-              final friendId = friends[index];
+              final friendEmail = friends[index];
 
               return ListTile(
                 title: Text('Friend $index'),
-                subtitle: Text('Friend ID: $friendId'),
+                subtitle: Text('Friend Email: $friendEmail'),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () => _removeFriend(friendId),
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => _removeFriend(friendEmail),
                 ),
               );
             },
@@ -67,87 +74,125 @@ class _FriendListScreenState extends State<FriendListScreen> {
         animatedIcon: AnimatedIcons.menu_close,
         children: [
           SpeedDialChild(
-            child: Icon(Icons.add),
+            child: const Icon(Icons.add),
             label: 'Adicionar Amigo',
             onTap: _addFriend,
           ),
+        ],
+      ),
+      bottomNavigationBar: CurvedNavigationBar(
+        backgroundColor: const Color.fromRGBO(19, 42, 101, 1.0),
+        color: Colors.grey[800]!,
+        buttonBackgroundColor: Colors.grey[800]!,
+        height: 50,
+        animationDuration: const Duration(milliseconds: 300),
+        index: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+            if (index == 0) {
+              _navigateToHome(context);
+            } else if (index == 1) {
+              _navigateToProfile(context);
+            }
+          });
+        },
+        items: const <Widget>[
+          Icon(Icons.home, color: Colors.white),
+          Icon(Icons.person, color: Colors.white),
+          Icon(Icons.people, color: Colors.white),
         ],
       ),
     );
   }
 
   void _addFriend() {
-    showDialog(
+    String friendEmailToAdd = '';
+
+    AwesomeDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Adicionar Amigo'),
-        content: TextField(
-          decoration: const InputDecoration(labelText: 'ID do Amigo'),
+      dialogType: DialogType.INFO,
+      animType: AnimType.BOTTOMSLIDE,
+      title: 'Adicionar Amigo',
+      desc: 'Insira o email do amigo',
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
           onChanged: (value) {
-            // Implement the logic to store the friend's ID entered by the user
+            friendEmailToAdd = value;
           },
+          decoration: const InputDecoration(
+            labelText: 'Email do Amigo',
+            border: OutlineInputBorder(),
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final friendId =
-                  ''; // Get the friend's ID entered in the text field
-
-              if (friendId.isNotEmpty) {
-                final userRef = FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(widget.userId);
-
-                // Check if the friendId is a valid user in your system
-                final friendSnapshot = await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(friendId)
-                    .get();
-                if (friendSnapshot.exists) {
-                  await userRef.update({
-                    'friendRequests': FieldValue.arrayUnion([friendId]),
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Solicitação de amizade enviada!')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('ID do amigo não encontrado.')),
-                  );
-                }
-              }
-
-              Navigator.of(context).pop();
-            },
-            child: const Text('Adicionar'),
-          ),
-        ],
       ),
-    );
+      btnCancelOnPress: () {},
+      btnOkOnPress: () async {
+        if (friendEmailToAdd.isNotEmpty) {
+          final userRef =
+              FirebaseFirestore.instance.collection('users').doc(widget.userId);
+
+          final friendSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .where('email', isEqualTo: friendEmailToAdd)
+              .get();
+          if (friendSnapshot.docs.isNotEmpty) {
+            final friendId = friendSnapshot.docs[0].id;
+            await userRef.update({
+              'friendRequests': FieldValue.arrayUnion([friendId]),
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Solicitação de amizade enviada!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Email do amigo não encontrado.')),
+            );
+          }
+        }
+      },
+    ).show();
   }
 
-  void _removeFriend(String friendId) async {
+  void _removeFriend(String friendEmail) async {
     setState(() {
-      friends.remove(friendId);
+      friends.remove(friendEmail);
     });
 
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(widget.userId);
 
     await userRef.update({
-      'friends': FieldValue.arrayRemove([friendId]),
+      'friends': FieldValue.arrayRemove([friendEmail]),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Amigo removido com sucesso!')),
+    );
+  }
+
+  void _navigateToHome(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(
+          user: FirebaseAuth.instance.currentUser!,
+          googleSignIn: GoogleSignIn(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToProfile(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          user: FirebaseAuth.instance.currentUser!,
+          googleSignIn: GoogleSignIn(),
+        ),
+      ),
     );
   }
 }

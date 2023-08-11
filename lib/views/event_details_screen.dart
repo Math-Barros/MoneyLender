@@ -8,7 +8,7 @@ class EventDetailsScreen extends StatefulWidget {
   final String eventId;
   final User user;
 
-  const EventDetailsScreen({
+  const EventDetailsScreen({super.key, 
     required this.eventId,
     required this.user,
   });
@@ -20,7 +20,7 @@ class EventDetailsScreen extends StatefulWidget {
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   String _eventName = '';
   double _rateioValue = 0.0;
-  List<String> _selectedFriends = [];
+  final List<String> _selectedFriends = [];
 
   @override
   void initState() {
@@ -88,7 +88,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   .get(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
 
                 if (snapshot.hasData) {
@@ -145,7 +145,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         title: const Text('Criar Rateio'),
         content: TextField(
           decoration: const InputDecoration(labelText: 'Valor do Rateio'),
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) {
             // Armazena o valor do rateio inserido
             setState(() {
@@ -171,7 +171,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
               // Obtém os dados do evento
               final eventSnapshot = await eventRef.get();
-              final eventData = eventSnapshot.data() as Map<String, dynamic>?;
+              final eventData = eventSnapshot.data();
               if (eventData != null) {
                 final rateios = eventData['rateios'] as List<dynamic>? ?? [];
 

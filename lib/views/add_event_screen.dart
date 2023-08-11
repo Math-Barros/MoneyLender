@@ -6,15 +6,15 @@ import 'package:moneylender/views/edit_event_screen.dart';
 class AddEventScreen extends StatefulWidget {
   final User user;
 
-  const AddEventScreen({required this.user});
+  const AddEventScreen({super.key, required this.user});
 
   @override
   _AddEventScreenState createState() => _AddEventScreenState();
 }
 
 class _AddEventScreenState extends State<AddEventScreen> {
-  TextEditingController _eventNameController = TextEditingController();
-  TextEditingController _eventDescriptionController = TextEditingController();
+  final TextEditingController _eventNameController = TextEditingController();
+  final TextEditingController _eventDescriptionController = TextEditingController();
   bool _showEditOrDelete = false;
   String? _createdEventId;
 

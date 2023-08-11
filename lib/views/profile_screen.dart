@@ -4,15 +4,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:moneylender/views/friend_list_screen.dart';
+import 'package:moneylender/views/home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final User? user;
   final GoogleSignIn googleSignIn;
 
-  const ProfileScreen({required this.user, required this.googleSignIn});
+  const ProfileScreen(
+      {Key? key, required this.user, required this.googleSignIn})
+      : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -20,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String? profileImageUrl;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
@@ -27,33 +32,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchProfileImageUrl();
   }
 
-  Future<void> _fetchProfileImageUrl() async {
-    if (widget.user != null) {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_images/${widget.user?.uid}.jpg');
-
-      try {
-        final imageUrl = await storageRef.getDownloadURL();
-        setState(() {
-          profileImageUrl = imageUrl;
-        });
-      } catch (e) {
-        print("Error fetching profile image URL: $e");
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
+      backgroundColor: const Color.fromRGBO(19, 42, 101, 1.0),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 50.0),
             if (profileImageUrl != null)
               CircleAvatar(
                 radius: 50,
@@ -61,12 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             const SizedBox(height: 16.0),
             Text(
-              'ID do usuário: ${widget.user?.uid ?? ''}',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              'Nome do usuário: ${widget.user?.displayName ?? ''}',
+              widget.user?.displayName ?? '',
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 16.0),
@@ -82,6 +63,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: CurvedNavigationBar(
+        backgroundColor: const Color.fromRGBO(19, 42, 101, 1.0),
+        color: const Color(0xFFCBB26A),
+        buttonBackgroundColor: const Color(0xFFCBB26A),
+        height: 50,
+        animationDuration: const Duration(milliseconds: 300),
+        index: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+            if (index == 0) {
+              _navigateToHome(context);
+            } else if (index == 2) {
+              _navigateToFriendList(context);
+            }
+          });
+        },
+        items: const <Widget>[
+          Icon(Icons.home, color: Color.fromRGBO(19, 42, 101, 1.0)),
+          Icon(Icons.person, color: Color.fromRGBO(19, 42, 101, 1.0)),
+          Icon(Icons.people, color: Color.fromRGBO(19, 42, 101, 1.0)),
+        ],
+      ),
     );
   }
 
@@ -95,12 +99,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .child('profile_images/${widget.user?.uid}.jpg');
       final uploadTask = storageRef.putFile(File(pickedImage.path));
 
-      final snapshot = await uploadTask.whenComplete(() {});
-      final imageUrl = await snapshot.ref.getDownloadURL();
+      try {
+        await uploadTask;
+        final imageUrl = await storageRef.getDownloadURL();
+        setState(() {
+          profileImageUrl = imageUrl;
+        });
+      } catch (e) {
+        print("Error uploading or fetching profile image URL: $e");
+      }
+    }
+  }
 
-      setState(() {
-        profileImageUrl = imageUrl;
-      });
+  Future<void> _fetchProfileImageUrl() async {
+    if (widget.user != null) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${widget.user?.uid}.jpg');
+
+      try {
+        final imageUrl = await storageRef.getDownloadURL();
+        setState(() {
+          profileImageUrl = imageUrl;
+        });
+      } catch (e) {
+        print("Error fetching profile image URL: $e");
+        // Se a imagem não estiver disponível no Storage, tenta obter a imagem do perfil do Google
+        if (widget.user?.photoURL != null) {
+          setState(() {
+            profileImageUrl = widget.user!.photoURL;
+          });
+        }
+      }
     }
   }
 
@@ -109,7 +139,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (await widget.googleSignIn.isSignedIn()) {
         await widget.googleSignIn.signOut();
       }
-      Navigator.pop(context);
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
+  }
+
+  void _navigateToFriendList(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FriendListScreen(userId: widget.user!.uid),
+      ),
+    );
+  }
+
+  void _navigateToHome(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            HomeScreen(user: widget.user, googleSignIn: widget.googleSignIn),
+      ),
+    );
   }
 }

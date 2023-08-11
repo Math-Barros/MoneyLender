@@ -2,17 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:moneylender/views/forgot_password.dart';
 import 'package:moneylender/views/home_screen.dart';
 import 'package:moneylender/views/register_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-bool _wrongEmail = false;
-bool _wrongPassword = false;
-
 class LoginPage extends StatefulWidget {
   final GoogleSignIn googleSignIn;
 
-  const LoginPage({super.key, required this.googleSignIn});
+  const LoginPage({required this.googleSignIn});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -23,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
   late String password;
 
   bool _showSpinner = false;
+  bool _wrongEmail = false;
+  bool _wrongPassword = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -31,31 +32,23 @@ class _LoginPageState extends State<LoginPage> {
     if (isSignedIn) {
       return _auth.currentUser;
     } else {
-      final GoogleSignInAccount? googleUser =
-          await widget.googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser!.authentication;
+      final GoogleSignInAccount? googleUser = await widget.googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
       return userCredential.user;
     }
   }
 
-  void onGoogleSignIn(BuildContext context) async {
+  Future<void> onGoogleSignIn(BuildContext context) async {
     setState(() {
       _showSpinner = true;
     });
 
     User? user = await _handleSignIn();
-
-    setState(() {
-      _showSpinner = false;
-    });
-
     if (user != null) {
       Navigator.push(
         context,
@@ -65,10 +58,11 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
-  }
 
-  String emailText = 'Email doesn\'t match';
-  String passwordText = 'Password doesn\'t match';
+    setState(() {
+      _showSpinner = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,13 +123,17 @@ class _LoginPageState extends State<LoginPage> {
                         style: const TextStyle(color: Colors.white),
                         keyboardType: TextInputType.emailAddress,
                         onChanged: (value) {
-                          email = value;
+                          setState(() {
+                            email = value;
+                            _wrongEmail = false;
+                          });
                         },
                         decoration: InputDecoration(
                           hintStyle: const TextStyle(color: Color(0xFFCBB26A)),
                           labelStyle: const TextStyle(color: Color(0xFFCBB26A)),
                           labelText: 'Email',
-                          errorText: _wrongEmail ? emailText : null,
+                          errorText:
+                              _wrongEmail ? 'Email doesn\'t match' : null,
                         ),
                       ),
                       const SizedBox(height: 20.0),
@@ -143,18 +141,40 @@ class _LoginPageState extends State<LoginPage> {
                         style: const TextStyle(color: Colors.white),
                         obscureText: true,
                         onChanged: (value) {
-                          password = value;
+                          setState(() {
+                            password = value;
+                            _wrongPassword = false;
+                          });
                         },
                         decoration: InputDecoration(
                           hintStyle: const TextStyle(color: Color(0xFFCBB26A)),
                           labelStyle: const TextStyle(color: Color(0xFFCBB26A)),
                           labelText: 'Password',
-                          errorText: _wrongPassword ? passwordText : null,
+                          errorText:
+                              _wrongPassword ? 'Password doesn\'t match' : null,
                         ),
                       ),
-                      const SizedBox(height: 30.0),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ForgotPassword(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Forgot your password?',
+                        style:
+                            TextStyle(fontSize: 20.0, color: Color(0xFFCBB26A)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30.0),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -197,11 +217,8 @@ class _LoginPageState extends State<LoginPage> {
                               });
                             } else {
                               setState(() {
-                                emailText = 'User doesn\'t exist';
-                                passwordText = 'Please check your email';
-
-                                _wrongPassword = true;
                                 _wrongEmail = true;
+                                _wrongPassword = true;
                               });
                             }
                           } finally {
@@ -270,8 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                       ),
-                      const SizedBox(
-                          height: 20.0), // Espaçamento adicionado aqui
+                      const SizedBox(height: 20.0),
                     ],
                   ),
                   Row(
