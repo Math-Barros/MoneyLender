@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,6 +16,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  late String name = '';
   late String email = '';
   late String password = '';
 
@@ -25,7 +24,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _wrongEmail = false;
 
   String _emailText = 'Please use a valid email';
-  final String _passwordText = 'Please use a strong password';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -85,6 +83,20 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     TextField(
                       style: const TextStyle(color: Colors.white),
+                      keyboardType: TextInputType.text,
+                      onChanged: (value) {
+                        setState(() {
+                          name = value;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Name',
+                        labelStyle: TextStyle(color: Color(0xFFCBB26A)),
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                    TextField(
+                      style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) {
                         setState(() {
@@ -123,6 +135,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     backgroundColor: const Color(0xFFCBB26A),
                   ),
                   onPressed: () async {
+                    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+                      return;
+                    }
+
                     setState(() {
                       _showSpinner = true;
                     });
@@ -130,17 +146,27 @@ class _RegisterPageState extends State<RegisterPage> {
                     try {
                       if (validator.isEmail(email) &&
                           validator.isLength(password, 6)) {
-                        final newUser =
+                        final UserCredential newUserCredential =
                             await _auth.createUserWithEmailAndPassword(
                           email: email,
                           password: password,
                         );
 
+                        await newUserCredential.user!.updateDisplayName(name);
+                        await _saveUserData(
+                            newUserCredential.user!, name, email);
+
+                        setState(() {
+                          name = '';
+                          email = '';
+                          password = '';
+                        });
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => HomeScreen(
-                              user: newUser.user!,
+                              user: newUserCredential.user!,
                               googleSignIn: widget.googleSignIn,
                             ),
                           ),
@@ -160,6 +186,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               'The email address is already in use by another account';
                         }
                       });
+                    } catch (e) {
+                      print("Error during registration: $e");
                     }
 
                     setState(() {
@@ -169,30 +197,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: const Text(
                     'Register',
                     style: TextStyle(fontSize: 25.0, color: Colors.white),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
-                    backgroundColor: Colors.red,
-                  ),
-                  onPressed: () {
-                    onGoogleSignIn(context);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/images/google_logo.png',
-                        height: 30.0,
-                        width: 30.0,
-                      ),
-                      const SizedBox(width: 10.0),
-                      const Text(
-                        'Sign in with Google',
-                        style: TextStyle(fontSize: 20.0, color: Colors.white),
-                      ),
-                    ],
                   ),
                 ),
                 Row(
@@ -235,37 +239,11 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Future<User?> _handleSignIn() async {
-    User? user;
-    bool isSignedIn = await widget.googleSignIn.isSignedIn();
-    if (isSignedIn) {
-      user = _auth.currentUser;
-    } else {
-      final GoogleSignInAccount? googleUser =
-          await widget.googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser!.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      user = (await _auth.signInWithCredential(credential)).user;
-    }
-
-    return user;
-  }
-
-  Future<void> onGoogleSignIn(BuildContext context) async {
-    User? user = await _handleSignIn();
-    if (user != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              HomeScreen(user: user, googleSignIn: widget.googleSignIn),
-        ),
-      );
-    }
+  Future<void> _saveUserData(User user, String name, String email) async {
+    await _firestore.collection('users').doc(user.uid).set({
+      'name': name,
+      'email': email,
+      'friends': [],
+    });
   }
 }

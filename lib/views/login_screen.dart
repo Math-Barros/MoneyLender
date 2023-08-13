@@ -1,8 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:moneylender/views/forgot_password.dart';
 import 'package:moneylender/views/home_screen.dart';
 import 'package:moneylender/views/register_screen.dart';
@@ -11,7 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class LoginPage extends StatefulWidget {
   final GoogleSignIn googleSignIn;
 
-  const LoginPage({required this.googleSignIn});
+  const LoginPage({Key? key, required this.googleSignIn}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -26,43 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _wrongPassword = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<User?> _handleSignIn() async {
-    bool isSignedIn = await widget.googleSignIn.isSignedIn();
-    if (isSignedIn) {
-      return _auth.currentUser;
-    } else {
-      final GoogleSignInAccount? googleUser = await widget.googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      return userCredential.user;
-    }
-  }
-
-  Future<void> onGoogleSignIn(BuildContext context) async {
-    setState(() {
-      _showSpinner = true;
-    });
-
-    User? user = await _handleSignIn();
-    if (user != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              HomeScreen(user: user, googleSignIn: widget.googleSignIn),
-        ),
-      );
-    }
-
-    setState(() {
-      _showSpinner = false;
-    });
-  }
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +162,16 @@ class _LoginPageState extends State<LoginPage> {
                             );
 
                             if (newUser.user != null) {
+                              final googleSignInAccount =
+                                  await widget.googleSignIn.signIn();
+                              if (googleSignInAccount != null) {
+                                await _saveUserData(
+                                  newUser.user!,
+                                  googleSignInAccount.displayName ?? '',
+                                  googleSignInAccount.email ?? '',
+                                );
+                              }
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -329,5 +302,65 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<User?> _handleSignIn() async {
+    User? user;
+
+    bool isSignedIn = await widget.googleSignIn.isSignedIn();
+    if (isSignedIn) {
+      user = _auth.currentUser;
+    } else {
+      final GoogleSignInAccount? googleUser =
+          await widget.googleSignIn.signIn();
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        user = (await _auth.signInWithCredential(credential)).user;
+        if (user != null) {
+          await _saveUserData(
+              user, googleUser.displayName ?? '', googleUser.email ?? '');
+        }
+      }
+    }
+
+    return user;
+  }
+
+  Future<void> onGoogleSignIn(BuildContext context) async {
+    User? user = await _handleSignIn();
+
+    if (user != null) {
+      final googleSignInAccount = await widget.googleSignIn.signIn();
+      if (googleSignInAccount != null) {
+        await _saveUserData(
+          user,
+          googleSignInAccount.displayName ?? '',
+          googleSignInAccount.email,
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                HomeScreen(user: user, googleSignIn: widget.googleSignIn),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveUserData(User user, String name, String email) async {
+    await _firestore.collection('users').doc(user.uid).set({
+      'name': name,
+      'email': email,
+      'friends': [],
+    });
   }
 }

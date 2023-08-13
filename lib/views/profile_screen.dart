@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             const SizedBox(height: 16.0),
             Text(
-              widget.user?.displayName ?? '',
+              widget.user?.displayName ?? '', // Mostra o nome do usuário
               style: const TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 16.0),

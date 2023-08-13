@@ -106,6 +106,30 @@ class _FriendListScreenState extends State<FriendListScreen> {
     );
   }
 
+  void _sendFriendRequest(String friendEmailToAdd) async {
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.userId);
+
+    final friendSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: friendEmailToAdd)
+        .get();
+
+    if (friendSnapshot.docs.isNotEmpty) {
+      final friendId = friendSnapshot.docs[0].id;
+      await userRef.update({
+        'friendRequests': FieldValue.arrayUnion([friendId]),
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solicitação de amizade enviada!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email do amigo não encontrado.')),
+      );
+    }
+  }
+
   void _addFriend() {
     String friendEmailToAdd = '';
 
@@ -130,26 +154,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
       btnCancelOnPress: () {},
       btnOkOnPress: () async {
         if (friendEmailToAdd.isNotEmpty) {
-          final userRef =
-              FirebaseFirestore.instance.collection('users').doc(widget.userId);
-
-          final friendSnapshot = await FirebaseFirestore.instance
-              .collection('users')
-              .where('email', isEqualTo: friendEmailToAdd)
-              .get();
-          if (friendSnapshot.docs.isNotEmpty) {
-            final friendId = friendSnapshot.docs[0].id;
-            await userRef.update({
-              'friendRequests': FieldValue.arrayUnion([friendId]),
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Solicitação de amizade enviada!')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Email do amigo não encontrado.')),
-            );
-          }
+          _sendFriendRequest(friendEmailToAdd);
         }
       },
     ).show();
