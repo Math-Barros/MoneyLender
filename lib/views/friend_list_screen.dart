@@ -26,9 +26,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend List'),
-      ),
+      backgroundColor: const Color.fromRGBO(19, 42, 101, 1.0),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -86,7 +84,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
                       final requestEmail = requestUserData['email'] as String;
 
                       return ListTile(
-                        title: Text('Friend Request'),
+                        title: const Text('Friend Request'),
                         subtitle: Text('From: $requestEmail'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -133,12 +131,27 @@ class _FriendListScreenState extends State<FriendListScreen> {
                       }
 
                       final friendEmail = friendUserData['email'] as String;
+                      final friendName = friendUserData['name'] as String;
 
                       return ListTile(
-                        title: Text('Friend $index'),
-                        subtitle: Text('Friend Email: $friendEmail'),
+                        title: Text(
+                          friendName,
+                          style: const TextStyle(
+                            color:  Color(0xFFCBB26A), 
+                            fontWeight: FontWeight
+                                .bold, 
+                          ),
+                        ),
+                        subtitle: Text(
+                          friendEmail,
+                          style: const TextStyle(
+                            color: Colors.white, 
+                            fontStyle: FontStyle
+                                .italic, 
+                          ),
+                        ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete),
+                          icon: const Icon(Icons.delete, color: Colors.white,),
                           onPressed: () => _removeFriend(friendUserId),
                         ),
                       );
@@ -161,8 +174,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
       ),
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: const Color.fromRGBO(19, 42, 101, 1.0),
-        color: Colors.grey[800]!,
-        buttonBackgroundColor: Colors.grey[800]!,
+        color: const Color(0xFFCBB26A),
+        buttonBackgroundColor: const Color(0xFFCBB26A),
         height: 50,
         animationDuration: const Duration(milliseconds: 300),
         index: _selectedIndex,
@@ -177,9 +190,9 @@ class _FriendListScreenState extends State<FriendListScreen> {
           });
         },
         items: const <Widget>[
-          Icon(Icons.home, color: Colors.white),
-          Icon(Icons.person, color: Colors.white),
-          Icon(Icons.people, color: Colors.white),
+          Icon(Icons.home, color: Color.fromRGBO(19, 42, 101, 1.0)),
+          Icon(Icons.person, color: Color.fromRGBO(19, 42, 101, 1.0)),
+          Icon(Icons.people, color: Color.fromRGBO(19, 42, 101, 1.0)),
         ],
       ),
     );

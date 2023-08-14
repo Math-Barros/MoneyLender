@@ -46,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16.0),
             Text(
               widget.user?.displayName ?? '', // Mostra o nome do usuário
-              style: const TextStyle(fontSize: 20),
+              style: const TextStyle(fontSize: 20, color: Colors.white),
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(

@@ -80,8 +80,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     final eventId = events[index].id;
 
                     return ListTile(
-                      title: Text(eventName),
-                      subtitle: Text(eventDescription),
+                      title: Text(
+                        eventName,
+                        style: const TextStyle(
+                          color: Color(0xFFCBB26A),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        eventDescription,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                       onTap: () => _navigateToEventDetails(context, eventId),
                     );
                   },
