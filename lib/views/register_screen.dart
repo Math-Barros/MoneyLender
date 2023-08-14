@@ -240,10 +240,15 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _saveUserData(User user, String name, String email) async {
-    await _firestore.collection('users').doc(user.uid).set({
-      'name': name,
-      'email': email,
-      'friends': [],
-    });
+    final userRef = _firestore.collection('users').doc(user.uid);
+    final userSnapshot = await userRef.get();
+
+    if (!userSnapshot.exists) {
+      await userRef.set({
+        'name': name,
+        'email': email,
+        'friends': [],
+      });
+    }
   }
 }

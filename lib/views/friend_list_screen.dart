@@ -19,6 +19,7 @@ class FriendListScreen extends StatefulWidget {
 
 class _FriendListScreenState extends State<FriendListScreen> {
   List<String> friends = [];
+  List<String> friendRequests = [];
   int _selectedIndex = 2;
   late String friendEmailToAdd;
 
@@ -43,30 +44,108 @@ class _FriendListScreenState extends State<FriendListScreen> {
           }
 
           final data = snapshot.data?.data();
-          if (data == null || !data.containsKey('friends')) {
-            return const Text('Nenhum amigo encontrado.');
+          if (data == null) {
+            return const Text('Nenhum dado encontrado.');
           }
 
-          friends = List<String>.from(data['friends']);
-
-          if (friends.isEmpty) {
-            return const Text('Nenhum amigo encontrado.');
+          final friendsData = data['friends'];
+          if (friendsData != null && friendsData is List) {
+            friends = List<String>.from(friendsData);
           }
 
-          return ListView.builder(
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              final friendEmail = friends[index];
+          final requestsData = data['friendRequests'];
+          if (requestsData != null && requestsData is List) {
+            friendRequests = List<String>.from(requestsData);
+          }
 
-              return ListTile(
-                title: Text('Friend $index'),
-                subtitle: Text('Friend Email: $friendEmail'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _removeFriend(friendEmail),
-                ),
-              );
-            },
+          return ListView(
+            children: [
+              const SizedBox(height: 16),
+              if (friendRequests.isNotEmpty)
+                ...friendRequests.map((requestUserId) {
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(requestUserId)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const Text('Erro ao carregar os dados.');
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      }
+
+                      final requestUserData =
+                          snapshot.data?.data() as Map<String, dynamic>?;
+                      if (requestUserData == null) {
+                        return const SizedBox();
+                      }
+
+                      final requestEmail = requestUserData['email'] as String;
+
+                      return ListTile(
+                        title: Text('Friend Request'),
+                        subtitle: Text('From: $requestEmail'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.check),
+                              onPressed: () =>
+                                  _acceptFriendRequest(requestUserId),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () =>
+                                  _declineFriendRequest(requestUserId),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+              if (friends.isNotEmpty)
+                ...friends.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final friendUserId = entry.value;
+
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(friendUserId)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const Text('Erro ao carregar os dados.');
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      }
+
+                      final friendUserData =
+                          snapshot.data?.data() as Map<String, dynamic>?;
+                      if (friendUserData == null) {
+                        return const SizedBox();
+                      }
+
+                      final friendEmail = friendUserData['email'] as String;
+
+                      return ListTile(
+                        title: Text('Friend $index'),
+                        subtitle: Text('Friend Email: $friendEmail'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _removeFriend(friendUserId),
+                        ),
+                      );
+                    },
+                  );
+                }).toList(),
+            ],
           );
         },
       ),
@@ -106,28 +185,37 @@ class _FriendListScreenState extends State<FriendListScreen> {
     );
   }
 
-  void _sendFriendRequest(String friendEmailToAdd) async {
-    final userRef =
+  void _acceptFriendRequest(String requestId) async {
+    final currentUserRef =
+        FirebaseFirestore.instance.collection('users').doc(widget.userId);
+    final requestUserRef =
+        FirebaseFirestore.instance.collection('users').doc(requestId);
+
+    await currentUserRef.update({
+      'friends': FieldValue.arrayUnion([requestId]),
+      'friendRequests': FieldValue.arrayRemove([requestId]),
+    });
+
+    await requestUserRef.update({
+      'friends': FieldValue.arrayUnion([widget.userId]),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Amizade aceita com sucesso!')),
+    );
+  }
+
+  void _declineFriendRequest(String requestId) async {
+    final currentUserRef =
         FirebaseFirestore.instance.collection('users').doc(widget.userId);
 
-    final friendSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: friendEmailToAdd)
-        .get();
+    await currentUserRef.update({
+      'friendRequests': FieldValue.arrayRemove([requestId]),
+    });
 
-    if (friendSnapshot.docs.isNotEmpty) {
-      final friendId = friendSnapshot.docs[0].id;
-      await userRef.update({
-        'friendRequests': FieldValue.arrayUnion([friendId]),
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitação de amizade enviada!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email do amigo não encontrado.')),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Solicitação de amizade recusada.')),
+    );
   }
 
   void _addFriend() {
@@ -160,16 +248,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
     ).show();
   }
 
-  void _removeFriend(String friendEmail) async {
-    setState(() {
-      friends.remove(friendEmail);
-    });
-
-    final userRef =
+  void _removeFriend(String friendUserId) async {
+    final currentUserRef =
         FirebaseFirestore.instance.collection('users').doc(widget.userId);
 
-    await userRef.update({
-      'friends': FieldValue.arrayRemove([friendEmail]),
+    await currentUserRef.update({
+      'friends': FieldValue.arrayRemove([friendUserId]),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -199,5 +283,31 @@ class _FriendListScreenState extends State<FriendListScreen> {
         ),
       ),
     );
+  }
+
+  void _sendFriendRequest(String friendEmailToAdd) async {
+    final friendSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: friendEmailToAdd)
+        .get();
+
+    if (friendSnapshot.docs.isNotEmpty) {
+      final friendId = friendSnapshot.docs[0].id;
+
+      final friendRef =
+          FirebaseFirestore.instance.collection('users').doc(friendId);
+
+      await friendRef.update({
+        'friendRequests': FieldValue.arrayUnion([widget.userId]),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solicitação de amizade enviada!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email do amigo não encontrado.')),
+      );
+    }
   }
 }
