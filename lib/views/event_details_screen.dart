@@ -8,10 +8,11 @@ class EventDetailsScreen extends StatefulWidget {
   final String eventId;
   final User user;
 
-  const EventDetailsScreen({super.key, 
+  const EventDetailsScreen({
+    Key? key,
     required this.eventId,
     required this.user,
-  });
+  }) : super(key: key);
 
   @override
   _EventDetailsScreenState createState() => _EventDetailsScreenState();
@@ -28,27 +29,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     _fetchEventData();
   }
 
-  void _fetchEventData() async {
-    final eventDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.user.uid)
-        .collection('events')
-        .doc(widget.eventId)
-        .get();
-
-    if (eventDoc.exists) {
-      final eventData = eventDoc.data();
-      setState(() {
-        _eventName = eventData?['name'] ?? '';
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_eventName), // Display the event name in the AppBar
+        title: Text(_eventName),
       ),
       body: Center(
         child: Column(
@@ -129,6 +114,22 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     return total;
   }
 
+  void _fetchEventData() async {
+    final eventDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('events')
+        .doc(widget.eventId)
+        .get();
+
+    if (eventDoc.exists) {
+      final eventData = eventDoc.data();
+      setState(() {
+        _eventName = eventData?['name'] ?? '';
+      });
+    }
+  }
+
   void _openFriendListScreen(BuildContext context) {
     Navigator.push(
       context,
@@ -147,7 +148,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           decoration: const InputDecoration(labelText: 'Valor do Rateio'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) {
-            // Armazena o valor do rateio inserido
             setState(() {
               _rateioValue = double.tryParse(value) ?? 0.0;
             });
@@ -162,29 +162,24 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           ),
           TextButton(
             onPressed: () async {
-              // Criação do rateio no Firestore
               final eventRef = FirebaseFirestore.instance
                   .collection('users')
                   .doc(widget.user.uid)
                   .collection('events')
                   .doc(widget.eventId);
 
-              // Obtém os dados do evento
               final eventSnapshot = await eventRef.get();
               final eventData = eventSnapshot.data();
               if (eventData != null) {
                 final rateios = eventData['rateios'] as List<dynamic>? ?? [];
 
-                // Cria um novo rateio com o valor inserido
                 final novoRateio = {
                   'valor': _rateioValue,
                   'amigos': _selectedFriends,
                 };
 
-                // Adiciona o novo rateio à lista de rateios
                 rateios.add(novoRateio);
 
-                // Atualiza os dados do evento no Firestore
                 await eventRef.update({
                   'rateios': rateios,
                 });

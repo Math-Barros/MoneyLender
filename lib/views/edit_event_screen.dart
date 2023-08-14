@@ -6,10 +6,11 @@ class EditEventScreen extends StatefulWidget {
   final String eventId;
   final User user;
 
-  const EditEventScreen({super.key, 
+  const EditEventScreen({
+    Key? key,
     required this.eventId,
     required this.user,
-  });
+  }) : super(key: key);
 
   @override
   _EditEventScreenState createState() => _EditEventScreenState();
@@ -17,7 +18,8 @@ class EditEventScreen extends StatefulWidget {
 
 class _EditEventScreenState extends State<EditEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
-  final TextEditingController _eventDescriptionController = TextEditingController();
+  final TextEditingController _eventDescriptionController =
+      TextEditingController();
 
   String _eventName = '';
   String _eventDescription = '';
@@ -26,29 +28,6 @@ class _EditEventScreenState extends State<EditEventScreen> {
   void initState() {
     super.initState();
     _fetchEventData();
-  }
-
-  void _fetchEventData() async {
-    final eventDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.user.uid)
-        .collection('events')
-        .doc(widget.eventId)
-        .get();
-
-    if (eventDoc.exists) {
-      setState(() {
-        _eventName = eventDoc['name'];
-        _eventDescription = eventDoc['description'];
-      });
-      _eventNameController.text = _eventName;
-      _eventDescriptionController.text = _eventDescription;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Evento não encontrado.')),
-      );
-      Navigator.pop(context); // Volte para a tela anterior
-    }
   }
 
   @override
@@ -73,7 +52,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
             const SizedBox(height: 16.0),
             TextFormField(
               controller: _eventDescriptionController,
-              decoration: const InputDecoration(labelText: 'Descrição do Evento'),
+              decoration:
+                  const InputDecoration(labelText: 'Descrição do Evento'),
               onChanged: (value) {
                 setState(() {
                   _eventDescription = value;
@@ -89,6 +69,29 @@ class _EditEventScreenState extends State<EditEventScreen> {
         ),
       ),
     );
+  }
+
+  void _fetchEventData() async {
+    final eventDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('events')
+        .doc(widget.eventId)
+        .get();
+
+    if (eventDoc.exists) {
+      setState(() {
+        _eventName = eventDoc['name'];
+        _eventDescription = eventDoc['description'];
+      });
+      _eventNameController.text = _eventName;
+      _eventDescriptionController.text = _eventDescription;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Evento não encontrado.')),
+      );
+      Navigator.pop(context); // Volte para a tela anterior
+    }
   }
 
   void _updateEventDetails(BuildContext context) async {

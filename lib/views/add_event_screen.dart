@@ -6,7 +6,10 @@ import 'package:moneylender/views/edit_event_screen.dart';
 class AddEventScreen extends StatefulWidget {
   final User user;
 
-  const AddEventScreen({super.key, required this.user});
+  const AddEventScreen({
+    Key? key,
+    required this.user,
+  }) : super(key: key);
 
   @override
   _AddEventScreenState createState() => _AddEventScreenState();
@@ -14,9 +17,54 @@ class AddEventScreen extends StatefulWidget {
 
 class _AddEventScreenState extends State<AddEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
-  final TextEditingController _eventDescriptionController = TextEditingController();
+  final TextEditingController _eventDescriptionController =
+      TextEditingController();
   bool _showEditOrDelete = false;
   String? _createdEventId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFCBB26A),
+      appBar: AppBar(
+        backgroundColor: Color(0xFFCBB26A),
+        title: const Text('Adicionar Evento'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _eventNameController,
+              decoration: const InputDecoration(labelText: 'Nome do Evento'),
+            ),
+            const SizedBox(height: 16.0),
+            TextField(
+              controller: _eventDescriptionController,
+              decoration:
+                  const InputDecoration(labelText: 'Descrição do Evento'),
+            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _addEvent,
+              child: const Text('Adicionar Evento'),
+            ),
+            if (_showEditOrDelete) ...[
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: _editEvent,
+                child: const Text('Editar Evento'),
+              ),
+              ElevatedButton(
+                onPressed: _deleteEvent,
+                child: const Text('Excluir Evento'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _addEvent() async {
     String eventName = _eventNameController.text.trim();
@@ -108,47 +156,5 @@ class _AddEventScreenState extends State<AddEventScreen> {
         const SnackBar(content: Text('Nenhum evento criado ainda.')),
       );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Adicionar Evento'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _eventNameController,
-              decoration: const InputDecoration(labelText: 'Nome do Evento'),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _eventDescriptionController,
-              decoration:
-                  const InputDecoration(labelText: 'Descrição do Evento'),
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _addEvent,
-              child: const Text('Adicionar Evento'),
-            ),
-            if (_showEditOrDelete) ...[
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _editEvent,
-                child: const Text('Editar Evento'),
-              ),
-              ElevatedButton(
-                onPressed: _deleteEvent,
-                child: const Text('Excluir Evento'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }

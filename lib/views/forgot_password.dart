@@ -7,7 +7,7 @@ class ForgotPassword extends StatelessWidget {
 
   late String email;
 
-  ForgotPassword({super.key});
+  ForgotPassword({Key? key}) : super(key: key);
 
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
@@ -20,13 +20,18 @@ class ForgotPassword extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          const Align(
-            alignment: Alignment.topRight,
-            //child: Image.asset('assets/images/background.png'),
-          ),
+          // Uncomment the next line and provide your image asset path
+          // Align(
+          //   alignment: Alignment.topRight,
+          //   child: Image.asset('assets/images/background.png'),
+          // ),
           Padding(
             padding: const EdgeInsets.only(
-                top: 60.0, bottom: 20.0, left: 20.0, right: 20.0),
+              top: 60.0,
+              bottom: 20.0,
+              left: 20.0,
+              right: 20.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
