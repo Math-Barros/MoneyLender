@@ -240,6 +240,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
 
     await requestUserRef.update({
       'friends': FieldValue.arrayUnion([widget.userId]),
+      'friendRequests': FieldValue.arrayRemove([widget.userId]),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -293,9 +294,15 @@ class _FriendListScreenState extends State<FriendListScreen> {
   void _removeFriend(String friendUserId) async {
     final currentUserRef =
         FirebaseFirestore.instance.collection('users').doc(widget.userId);
+    final friendUserRef =
+        FirebaseFirestore.instance.collection('users').doc(friendUserId);
 
     await currentUserRef.update({
       'friends': FieldValue.arrayRemove([friendUserId]),
+    });
+
+    await friendUserRef.update({
+      'friends': FieldValue.arrayRemove([widget.userId]),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
