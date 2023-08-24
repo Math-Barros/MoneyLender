@@ -278,15 +278,6 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (newUser.user != null) {
-        final googleSignInAccount = await widget.googleSignIn.signIn();
-        if (googleSignInAccount != null) {
-          await _saveUserData(
-            newUser.user!,
-            googleSignInAccount.displayName ?? '',
-            googleSignInAccount.email ?? '',
-          );
-        }
-
         _navigateToHomeScreen(newUser.user!);
       }
     } catch (e) {
@@ -327,28 +318,19 @@ class _LoginPageState extends State<LoginPage> {
   Future<User?> _handleSignIn() async {
     User? user;
 
-    bool isSignedIn = await widget.googleSignIn.isSignedIn();
-    if (isSignedIn) {
-      user = _auth.currentUser;
-    } else {
-      final GoogleSignInAccount? googleUser =
-          await widget.googleSignIn.signIn();
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
+    final GoogleSignInAccount? googleUser = await widget.googleSignIn.signIn();
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-        user = (await _auth.signInWithCredential(credential)).user;
-        if (user != null) {
-          await _saveUserData(
-            user,
-            googleUser.displayName ?? '',
-            googleUser.email,
-          );
+      user = (await _auth.signInWithCredential(credential)).user;
+      if (user != null) {
+        if (user.providerData.isNotEmpty && user.providerData[0].providerId == 'google.com') {
+          await _saveUserData(user, googleUser.displayName ?? '', googleUser.email);
         }
       }
     }

@@ -186,7 +186,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
   }
 
   Widget _buildEmptyFriendsList() {
-    return Center(
+    return const Center(
       child: Text(
         'Você não possui amigos.',
         style: TextStyle(

@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart'; // Importação do pacote de ícones
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:moneylender/views/edit_profile_screen.dart';
@@ -140,7 +139,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       Text(
                                         friendsCount.toString(),
                                         style: const TextStyle(
-                                          color: Color.fromRGBO(39, 105, 171, 1),
+                                          color:
+                                              Color.fromRGBO(39, 105, 171, 1),
                                           fontFamily: 'Nunito',
                                           fontSize: 25,
                                         ),
@@ -156,7 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       height: 50,
                                       width: 3,
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(100),
+                                        borderRadius:
+                                            BorderRadius.circular(100),
                                         color: Colors.grey,
                                       ),
                                     ),
@@ -174,7 +175,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       const Text(
                                         '1',
                                         style: TextStyle(
-                                          color: Color.fromRGBO(39, 105, 171, 1),
+                                          color:
+                                              Color.fromRGBO(39, 105, 171, 1),
                                           fontFamily: 'Nunito',
                                           fontSize: 25,
                                         ),
@@ -190,6 +192,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+              ),
+              Positioned(
+                top: 110,
+                right: 20,
+                child: widget.user?.providerData[0].providerId == 'google.com'
+                    ? Icon(
+                        AntDesign.google,
+                        color: Colors.grey[700],
+                        size: 30,
+                      )
+                    : () {
+                        print(
+                            "Provider ID: ${widget.user?.providerData[0].providerId}");
+                        return SizedBox();
+                      }(),
               ),
               Positioned(
                 top: 0,

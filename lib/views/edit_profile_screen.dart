@@ -15,7 +15,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   String? profileImageUrl;
   String defaultProfileImageUrl = 'assets/images/user.png';
 

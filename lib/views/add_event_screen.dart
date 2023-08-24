@@ -27,7 +27,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFCBB26A),
       appBar: AppBar(
-        backgroundColor: Color(0xFFCBB26A),
+        backgroundColor: const Color(0xFFCBB26A),
         title: const Text('Adicionar Evento'),
       ),
       body: Padding(
